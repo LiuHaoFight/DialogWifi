@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="cordova-plugin-dialog-wifi" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>DialogWifi</name>
+    <js-module name="DialogWifi" src="www/DialogWifi.js">
+        <clobbers target="cordova.plugins.DialogWifi" />
+    </js-module>
+
+
+    <platform name="android">
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="DialogWifi">
+                <param name="android-package" value="com.siemens.plugins.DialogWifi" />
+            </feature>
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+            <uses-permission android:name="android.permission.INTERNET" />
+        </config-file>
+        <framework src="android/dialogwifi.gradle" custom="true" type="gradleReference" />
+        <source-file src="src/android/DialogWifi.java" target-dir="src/com/siemens/plugins/DialogWifi" />
+        <source-file src="src/android/DialogWifiImpl.java" target-dir="src/com/siemens/plugins/DialogWifi" />
+
+    </platform>
+
+
+    <platform name="ios">
+        <config-file parent="/*" target="config.xml">
+            <feature name="DialogWifi">
+                <param name="ios-package" value="DialogWifi" />
+            </feature>
+        </config-file>
+        <source-file src="src/ios/DialogWifi.m" />
+    </platform>
+</plugin>

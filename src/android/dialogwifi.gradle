@@ -1,0 +1,10 @@
+repositories {
+        maven {
+            url 'https://dl.google.com/dl/android/maven2'
+        }
+        jcenter()
+    }
+
+dependencies { 
+    implementation 'com.koushikdutta.async:androidasync:3.1.0'  //socket
+}
