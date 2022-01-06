@@ -34,6 +34,14 @@
                 <param name="ios-package" value="DialogWifi" />
             </feature>
         </config-file>
-        <source-file src="src/ios/DialogWifi.m" />
+        <source-file src="src/ios/DialogWifi.swift" />
+        <source-file src="src/ios/SwiftyJSON.swift" />
+        <header-file src="src/ios/DialogWifi-Bridging-Header.h" />
+        <header-file src="src/ios/GCDAsyncSocket.h" />
+        <header-file src="src/ios/GCDAsyncUdpSocket.h" />
+        <source-file src="src/ios/GCDAsyncSocket.m" />
+        <source-file src="src/ios/GCDAsyncUdpSocket.m" />
     </platform>
+
+    <dependency id="cordova-plugin-add-swift-support" version="2.0.1" />
 </plugin>
