@@ -18,6 +18,7 @@ public class DialogWifi extends CordovaPlugin {
   private final DialogWifiImpl mDialogWifiImpl = new DialogWifiImpl();
   private CallbackContext mConnectCallback;
   private CallbackContext mCloseCallback;
+  private CallbackContext mWifiListCallback;
   private CallbackContext mDPMConfigCallback;
   private CallbackContext mWifiConfigCallback;
 
@@ -26,6 +27,7 @@ public class DialogWifi extends CordovaPlugin {
     public void onConnectResult(boolean connected) {
       if (mConnectCallback != null) {
         if (connected) {
+          sendConnected();
           mConnectCallback.success();
         } else {
           mConnectCallback.error("");
@@ -54,6 +56,10 @@ public class DialogWifi extends CordovaPlugin {
         receiveMode(jsonObject);
       }
 
+      if (jsonObject.has("APList")) {
+        receiveAPList(jsonObject);
+      }
+
       if (jsonObject.has("SET_AP_SSID_PW")) {
         receiveSetApSSIDPW(jsonObject);
       }
@@ -77,12 +83,16 @@ public class DialogWifi extends CordovaPlugin {
       case "close":
         this.onClose(callbackContext);
         return true;
+      case "scan":
+        this.scan(callbackContext);
+        return true;
       case "sendSSIDPW":
         String _ssid = args.getString(0);
         String _pwd = args.getString(1);
-        int _isHidden = args.getInt(2);
-        String _url = args.getString(3);
-        this.sendSSIDPW(_ssid, _pwd, _isHidden, _url, callbackContext);
+        int _security = args.getInt(2);
+        int _isHidden = args.getInt(3);
+        String _url = args.getString(4);
+        this.sendSSIDPW(_ssid, _pwd, _security, _isHidden, _url, callbackContext);
         return true;
     }
     return false;
@@ -104,6 +114,43 @@ public class DialogWifi extends CordovaPlugin {
     mDialogWifiImpl.onClose(mCallback);
   }
 
+  public void scan(CallbackContext callbackContext) {
+    Log.i(TAG, "scan()");
+    mWifiListCallback = callbackContext;
+    final JSONObject obj = new JSONObject();
+    try {
+      obj.put("msgType", 3);
+      obj.put("REQ_RESCAN", 0);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    mDialogWifiImpl.write(obj, ex -> {
+      if (ex != null) {
+        Log.e(TAG, "Sending message error");
+        ex.printStackTrace();
+      } else {
+        Log.i(TAG, "Sending message Completed");
+      }
+    });
+  }
+
+  public void sendConnected() {
+    final JSONObject obj = new JSONObject();
+    try {
+      obj.put("msgType", 0);
+      obj.put("CONNECTED", 0);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    mDialogWifiImpl.write(obj, ex -> {
+      if (ex != null) {
+        Log.e(TAG, "Sending message error");
+        ex.printStackTrace();
+      } else {
+        Log.i(TAG, "Sending message Completed");
+      }
+    });
+  }
 
   public void sendDPMSet(CallbackContext callbackContext) {
     Log.i(TAG, "sendDPMSet ");
@@ -132,7 +179,7 @@ public class DialogWifi extends CordovaPlugin {
     });
   }
 
-  public void sendSSIDPW(String _ssid, String _pwd, int _isHidden, String _url, CallbackContext callbackContext) {
+  public void sendSSIDPW(String _ssid, String _pwd, int _security, int _isHidden, String _url, CallbackContext callbackContext) {
     Log.i(TAG, "sendSSIDPW");
     this.mWifiConfigCallback = callbackContext;
     final JSONObject obj = new JSONObject();
@@ -222,4 +269,22 @@ public class DialogWifi extends CordovaPlugin {
       }
     }
   }
+
+  public void receiveAPList(JSONObject jsonObject) {
+
+    Log.i(TAG, "== receiveAPList() ==");
+    JSONArray jsonArray;
+    try {
+      jsonArray = jsonObject.getJSONArray("APList");
+      if (mWifiListCallback != null) {
+        mWifiListCallback.success(jsonArray);
+      }
+    } catch (JSONException e) {
+      e.printStackTrace();
+      if (mWifiListCallback != null) {
+        mWifiListCallback.error(e.getMessage());
+      }
+    }
+  }
+
 }

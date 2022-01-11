@@ -31,6 +31,12 @@ import Foundation
         self.disconnectSocket()
     }
     
+    var scanCommand: CDVInvokedUrlCommand!
+    @objc public func scan(_ command: CDVInvokedUrlCommand) {
+        self.scanCommand = command
+        self.tcpSendReqRescan()
+    }
+    
     @objc public func sendDPMSet(_ command: CDVInvokedUrlCommand) {
         self.tcpSendDPMSet()
         let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: "OK")
@@ -42,9 +48,10 @@ import Foundation
         self.configCommand = command
         let ssid = command.argument(at: 0) as! String
         let pwd = command.argument(at: 1) as! String
-        let hidden = command.argument(at: 2) as! Int
-        let url = command.argument(at: 3) as! String
-        self.tcpSendSSIDPW(ssid: ssid, pw: pwd, isHidden: hidden, serverURL: url)
+        let security = command.argument(at: 2) as! Int
+        let hidden = command.argument(at: 3) as! Int
+        let url = command.argument(at: 4) as! String
+        self.tcpSendSSIDPW(ssid: ssid, pw: pwd, security: security, isHidden: hidden, serverURL: url)
     }
     
     // MARK: - TCP Connection
@@ -117,6 +124,14 @@ import Foundation
                 UserDefaults.standard.set(thingName, forKey: "thingNameKey")
             }
 
+            if json["APList"].exists() {
+                if self.scanCommand != nil {
+                    let message: NSDictionary = NSDictionary()
+                    message.setValue(Any?(json["APList"]), forKey: "APList")
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: (message as! [AnyHashable: Any]))
+                    self.commandDelegate?.send(pluginResult, callbackId: self.scanCommand.callbackId)
+                }
+            }
             
             if json["RESULT_REBOOT"].exists() {
                 let resultReboot:String? = json["RESULT_REBOOT"].stringValue
@@ -179,14 +194,14 @@ import Foundation
         
     }
     
-//    func tcpSendReqRescan() {
-//        print("==> tcpSendReqRescan()\n")
-//        let cmdReqRescan: String = "{\"msgType\":3,\"REQ_RESCAN\":0}"
-//        let data = cmdReqRescan.data(using: String.Encoding.utf8)!
-//        mSocket.write(data, withTimeout:10, tag: 0)
-//        mSocket.readData(withTimeout: -1, tag: 0)
-//
-//    }
+    func tcpSendReqRescan() {
+        print("==> tcpSendReqRescan()\n")
+        let cmdReqRescan: String = "{\"msgType\":3,\"REQ_RESCAN\":0}"
+        let data = cmdReqRescan.data(using: String.Encoding.utf8)!
+        mSocket.write(data, withTimeout:10, tag: 0)
+        mSocket.readData(withTimeout: -1, tag: 0)
+
+    }
     
     func tcpSendDPMSet() {
         print("==> tcpSendDPMSet()\n")
@@ -197,7 +212,7 @@ import Foundation
         
     }
     
-    func tcpSendSSIDPW(ssid: String, pw: String, isHidden: Int, serverURL: String) {
+    func tcpSendSSIDPW(ssid: String, pw: String, security: Int, isHidden: Int, serverURL: String) {
         print("==> tcpSendSSIDPW()\n")
             //add "isHidden" in v2.3.1
         let cmdSendSSIDPW: String = "{\"msgType\":1, \"SET_AP_SSID_PW\":0, \"ssid\":\"\(ssid)\", \"pw\":\"\(pw)\", \"isHidden\":\(isHidden), \"url\":\"\(serverURL)\"}"
