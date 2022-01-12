@@ -9,7 +9,7 @@
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="DialogWifi">
-                <param name="android-package" value="com.siemens.plugins.DialogWifi" />
+                <param name="android-package" value="com.siemens.plugins.DialogWifi.DialogWifi" />
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest">
