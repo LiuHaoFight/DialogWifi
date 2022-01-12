@@ -2,7 +2,7 @@
 <plugin id="cordova-plugin-dialog-wifi" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>DialogWifi</name>
     <js-module name="DialogWifi" src="www/DialogWifi.js">
-        <clobbers target="cordova.plugins.DialogWifi" />
+        <clobbers target="DialogWifi" />
     </js-module>
 
 
