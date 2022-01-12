@@ -35,6 +35,7 @@ public class DialogWifiImpl {
   private AsyncSSLSocket mSSLSocket = null;
   private SSLParameters sslParameters;
   public String mHost;
+  public Int mPort;
   private ISocketStatusCallback mSocketStatusCallback;
 
   public interface ISocketStatusCallback {
@@ -51,8 +52,9 @@ public class DialogWifiImpl {
   }
 
 
-  public void setHost(String host) {
+  public void setHost(String host, Int port) {
     this.mHost = host;
+    this.mPort = port;
   }
 
   public void write(JSONObject object, CompletedCallback callback) {
@@ -90,7 +92,7 @@ public class DialogWifiImpl {
       new Runnable() {
         @Override
         public void run() {
-          AsyncServer.getDefault().connectSocket(new InetSocketAddress(mHost, 9900),
+          AsyncServer.getDefault().connectSocket(new InetSocketAddress(mHost, mPort),
             (Exception ex, final AsyncSocket socket) -> {
               Log.i(TAG, "AP Server Connection Completed");
               if (socket != null && ex == null) {

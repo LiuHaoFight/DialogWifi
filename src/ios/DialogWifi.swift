@@ -1,16 +1,24 @@
 import Foundation
+import NetworkExtension
+import SystemConfiguration.CaptiveNetwork
 
 @objc(DialogWifi) public class DialogWifi : CDVPlugin, GCDAsyncSocketDelegate  {
 
+    var wifiConfiguration: NEHotspotConfiguration?
+
     var mSocket: GCDAsyncSocket!
-    var mTimer:Timer?
-    var timeCount = 0
+    var mTimer: Timer?
+    var timeCount: Int!
     var isCompleted = false
     
-    let hostAddress = "10.0.0.1"
-    let tlsHostPort: UInt16 = 9900
+    var currentNetworkInfos: Array<NetworkInfo>? {
+        get {
+            return SSID.fetchNetworkInfo()
+        }
+    }
     
     override public func pluginInitialize() {
+        timeCount = 0
     }
 
     override public func onAppTerminate() {
@@ -21,7 +29,12 @@ import Foundation
     @objc public func onConnectSocket(_ command: CDVInvokedUrlCommand) {
 
         self.connectCommand = command
-        self.connectSocket()
+        let host = command.argument(at: 0) as! String
+        let port = command.argument(at: 1) as! UInt16
+        let ssid = command.argument(at: 2) as! String
+        let pw = command.argument(at: 3) as! String
+
+        self.connectWifi(ssidS: ssid, pw: pw, host: host, port: port)
     }
     
     var disconnectCommand: CDVInvokedUrlCommand!
@@ -54,18 +67,82 @@ import Foundation
         self.tcpSendSSIDPW(ssid: ssid, pw: pwd, security: security, isHidden: hidden, serverURL: url)
     }
     
+    // MARK: - WIFI Connection
+    
+    public func connectWifi(ssidS: String, pw: String, host: String, port: UInt16) {
+        wifiConfiguration = NEHotspotConfiguration(
+            ssid: ssidS,
+            passphrase: pw,
+            isWEP: false)
+        //wifiConfiguration = NEHotspotConfiguration(ssid: appDelegate.deviceSSID)
+        wifiConfiguration?.joinOnce = false
+        NEHotspotConfigurationManager.shared.apply(wifiConfiguration!) { error in
+            if let ssid = self.currentNetworkInfos?.first?.ssid {
+                print("connected SSID: \(ssid)")
+                if ssid == ssidS {
+                    usleep(300000)
+                    self.connectSocket(host:host, port:port)
+                } else {
+                    if (self.connectCommand != nil) {
+                        let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "error")
+                        self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
+                        self.connectCommand = nil
+                    }
+
+                }
+            } else {
+                if (self.connectCommand != nil) {
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "error")
+                    self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
+                    self.connectCommand = nil
+                }
+            }
+            
+        }
+    }
+    
+    public struct NetworkInfo {
+        var interface: String
+        var success: Bool = false
+        var ssid: String?
+        var bssid: String?
+    }
+    
+    public class SSID {
+        class func fetchNetworkInfo() -> [NetworkInfo]? {
+            if let interfaces: NSArray = CNCopySupportedInterfaces() {
+                var networkInfos = [NetworkInfo]()
+                for interface in interfaces {
+                    let interfaceName = interface as! String
+                    var networkInfo = NetworkInfo(interface: interfaceName,
+                                                  success: false,
+                                                  ssid: nil,
+                                                  bssid: nil)
+                    if let dict = CNCopyCurrentNetworkInfo(interfaceName as CFString) as NSDictionary? {
+                        networkInfo.success = true
+                        networkInfo.ssid = dict[kCNNetworkInfoKeySSID as String] as? String
+                        networkInfo.bssid = dict[kCNNetworkInfoKeyBSSID as String] as? String
+                    }
+                    networkInfos.append(networkInfo)
+                }
+                return networkInfos
+            }
+            return nil
+        }
+    }
+    
     // MARK: - TCP Connection
     
-    public func connectSocket() {
-        print("==> connectSocket()\n")
+    public func connectSocket(host: String, port: UInt16) {
         do {
-            self.mSocket = GCDAsyncSocket(delegate: self, delegateQueue: DispatchQueue.main)
-            try self.mSocket.connect(toHost: hostAddress, onPort: tlsHostPort, withTimeout: 5)
-            startTimer()
+            mSocket = GCDAsyncSocket(delegate: self, delegateQueue: DispatchQueue.main)
+            try mSocket.connect(toHost: host, onPort: port, withTimeout: 5)
         } catch let error {
             print(error)
-            let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "error")
-            self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
+            if self.connectCommand != nil {
+                let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "error")
+                self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
+            }
         }
     }
     
@@ -84,7 +161,6 @@ import Foundation
     
     public func socket(_ socket: GCDAsyncSocket, didConnectToHost host: String, port p:UInt16) {
         print(">> didConnectToHost!\n")
-        stopTimer()
         let sslSettings = [
             GCDAsyncSocketManuallyEvaluateTrust: NSNumber(value: true),
             kCFStreamSSLPeerName: "www.apple.com"
@@ -103,8 +179,6 @@ import Foundation
     
     public func socket(_ sock: GCDAsyncSocket, didRead: Data, withTag tag:CLong){
         print(">> didRead!");
-        
-        stopTimer()
         do {
             let json = try JSON(data: didRead)
             print("incoming message: \(json))")
@@ -191,7 +265,10 @@ import Foundation
         let data = cmdConnected.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)
-        
+        if (self.connectCommand != nil) {
+            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: "OK")
+            self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
+        }
     }
     
     func tcpSendReqRescan() {
@@ -220,42 +297,6 @@ import Foundation
         let data = cmdSendSSIDPW.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)
-    }
-    
-    // MARK: - Timer
-    
-    func startTimer() {
-        if let timer = mTimer {
-            if !timer.isValid {
-                mTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(update), userInfo: nil, repeats: true)
-            }
-        } else {
-            mTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(update), userInfo: nil, repeats: true)
-        }
-        
-    }
-    
-    @objc func update() {
-        timeCount += 1
-        print("timeCount = \(timeCount)")
-        if (timeCount > 5) {
-            if mSocket.isConnected {
-                mSocket.disconnect()
-            }
-            self.connectSocket()
-            self.stopTimer()
-        }
-    }
-    
-    func stopTimer() {
-        print(">> stopTimer()")
-        if let timer = mTimer {
-            if (timer.isValid) {
-                timer.invalidate()
-                mTimer = nil
-                timeCount = 0
-            }
-        }
     }
     
 }

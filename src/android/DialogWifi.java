@@ -75,7 +75,8 @@ public class DialogWifi extends CordovaPlugin {
     switch (action) {
       case "onConnectSocket":
         String host = args.getString(0);
-        this.onConnectSocket(host, callbackContext);
+        Int port = args.getString(1);
+        this.onConnectSocket(host, port, callbackContext);
         return true;
       case "sendDPMSet":
         this.sendDPMSet(callbackContext);
@@ -101,10 +102,10 @@ public class DialogWifi extends CordovaPlugin {
   /**
    * Socket Connect to AP Server after Device Wifi AP Connection Established.
    */
-  public void onConnectSocket(String host, CallbackContext callbackContext) {
-    Log.i(TAG, "onConnectSocket()" + host);
+  public void onConnectSocket(String host, Int port, CallbackContext callbackContext) {
+    Log.i(TAG, "onConnectSocket()" + host + " " + port);
     mConnectCallback = callbackContext;
-    mDialogWifiImpl.setHost(host);
+    mDialogWifiImpl.setHost(host, port);
     mDialogWifiImpl.onInitSocket(mCallback);
   }
 
@@ -179,7 +180,8 @@ public class DialogWifi extends CordovaPlugin {
     });
   }
 
-  public void sendSSIDPW(String _ssid, String _pwd, int _security, int _isHidden, String _url, CallbackContext callbackContext) {
+  public void sendSSIDPW(String _ssid, String _pwd, int _security, int _isHidden, String _url,
+      CallbackContext callbackContext) {
     Log.i(TAG, "sendSSIDPW");
     this.mWifiConfigCallback = callbackContext;
     final JSONObject obj = new JSONObject();

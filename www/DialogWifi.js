@@ -1,7 +1,7 @@
 var exec = require('cordova/exec');
 
-exports.onConnectSocket = function (host, success, error) {
-    exec(success, error, 'DialogWifi', 'onConnectSocket', [host]);
+exports.onConnectSocket = function (host, port, ssid, pw, success, error) {
+    exec(success, error, 'DialogWifi', 'onConnectSocket', [host, port, ssid, pw]);
 };
 
 exports.scan = function (success, error) {
