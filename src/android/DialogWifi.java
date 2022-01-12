@@ -75,7 +75,7 @@ public class DialogWifi extends CordovaPlugin {
     switch (action) {
       case "onConnectSocket":
         String host = args.getString(0);
-        Int port = args.getString(1);
+        int port = args.getInt(1);
         this.onConnectSocket(host, port, callbackContext);
         return true;
       case "sendDPMSet":
@@ -102,7 +102,7 @@ public class DialogWifi extends CordovaPlugin {
   /**
    * Socket Connect to AP Server after Device Wifi AP Connection Established.
    */
-  public void onConnectSocket(String host, Int port, CallbackContext callbackContext) {
+  public void onConnectSocket(String host, int port, CallbackContext callbackContext) {
     Log.i(TAG, "onConnectSocket()" + host + " " + port);
     mConnectCallback = callbackContext;
     mDialogWifiImpl.setHost(host, port);

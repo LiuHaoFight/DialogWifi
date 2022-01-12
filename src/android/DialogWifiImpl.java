@@ -35,7 +35,7 @@ public class DialogWifiImpl {
   private AsyncSSLSocket mSSLSocket = null;
   private SSLParameters sslParameters;
   public String mHost;
-  public Int mPort;
+  public int mPort;
   private ISocketStatusCallback mSocketStatusCallback;
 
   public interface ISocketStatusCallback {
@@ -52,7 +52,7 @@ public class DialogWifiImpl {
   }
 
 
-  public void setHost(String host, Int port) {
+  public void setHost(String host, int port) {
     this.mHost = host;
     this.mPort = port;
   }
