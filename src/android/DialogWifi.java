@@ -22,6 +22,9 @@ public class DialogWifi extends CordovaPlugin {
   private CallbackContext mDPMConfigCallback;
   private CallbackContext mWifiConfigCallback;
 
+  private String randomNo = "";
+  private String serialNo = "";
+
   private final DialogWifiImpl.ISocketStatusCallback mCallback = new DialogWifiImpl.ISocketStatusCallback() {
     @Override
     public void onConnectResult(boolean connected) {
@@ -44,6 +47,7 @@ public class DialogWifi extends CordovaPlugin {
 
     @Override
     public void onDateReport(JSONObject jsonObject) {
+      Log.i(TAG, "== onDateReport ==" + jsonObject.toString());
       if (jsonObject.has("SOCKET_TYPE")) {
         receiveSocketType(jsonObject);
       }
@@ -62,6 +66,10 @@ public class DialogWifi extends CordovaPlugin {
 
       if (jsonObject.has("SET_AP_SSID_PW")) {
         receiveSetApSSIDPW(jsonObject);
+      }
+
+      if (jsonObject.has("randomNo")) {
+        receiveSerialNo(jsonObject);
       }
 
       if (jsonObject.has("RESULT_REBOOT")) {
@@ -211,14 +219,15 @@ public class DialogWifi extends CordovaPlugin {
       try {
         if (obj.getInt("SET_AP_SSID_PW") != -1) {
           Log.i(TAG, "SET_AP_SSID_PW = " + obj.getInt("SET_AP_SSID_PW"));
-          mWifiConfigCallback.success();
           return;
         }
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
-    mWifiConfigCallback.error("");
+    if (mWifiConfigCallback != null) {
+      mWifiConfigCallback.error("SET_AP_SSID_PW error");
+    }
   }
 
   public void receiveSocketType(JSONObject obj) {
@@ -265,10 +274,20 @@ public class DialogWifi extends CordovaPlugin {
       try {
         if (obj.getInt("RESULT_REBOOT") != -1) {
           Log.i(TAG, "RESULT_REBOOT = " + obj.getInt("RESULT_REBOOT"));
+          if (mWifiConfigCallback != null) {
+            JSONArray message = new JSONArray();
+            message.put(randomNo);
+            message.put(serialNo);
+            mWifiConfigCallback.success(message);
+            return;
+          }
         }
       } catch (Exception e) {
         e.printStackTrace();
       }
+    }
+    if (mWifiConfigCallback != null) {
+      mWifiConfigCallback.error("reboot error");
     }
   }
 
@@ -289,4 +308,18 @@ public class DialogWifi extends CordovaPlugin {
     }
   }
 
+  public void receiveSerialNo(JSONObject obj) {
+    if (obj != null) {
+      Log.i(TAG, "== receiveSerialNo() ==");
+      try {
+        randomNo = obj.getString("randomNo");
+        serialNo = obj.getString("SN");
+        Log.i(TAG, "randomNo = " + randomNo);
+        Log.i(TAG, "serialNo = " + serialNo);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+    }
+  }
 }
