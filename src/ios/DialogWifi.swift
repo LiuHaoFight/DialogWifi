@@ -320,8 +320,7 @@ import SystemConfiguration.CaptiveNetwork
     func tcpSendSSIDPW(ssid: String, pw: String, security: Int, isHidden: Int, serverURL: String) {
         print("==> tcpSendSSIDPW()\n")
             //add "isHidden" in v2.3.1
-        let cmdSendSSIDPW: String = "{\"msgType\":1, \"SET_AP_SSID_PW\":0, \"ssid\":\"\(ssid)\", \"pw\":\"\(pw)\", \"isHidden\":\(isHidden), \"url\":\"\(serverURL)\"}"
-        //
+        let cmdSendSSIDPW: String = "{\"msgType\":1, \"SET_AP_SSID_PW\":0, \"ssid\":\"\(ssid)\", \"pw\":\"\(pw)\", ,\"securityType\":\(security), \"isHidden\":\(isHidden), \"url\":\"\(serverURL)\"}"        //
         let data = cmdSendSSIDPW.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)

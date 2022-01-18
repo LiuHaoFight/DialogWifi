@@ -198,6 +198,7 @@ public class DialogWifi extends CordovaPlugin {
       obj.put("SET_AP_SSID_PW", 0);
       obj.put("ssid", _ssid);
       obj.put("pw", _pwd);
+      obj.put("securityType", _security);
       obj.put("isHidden", _isHidden);
       obj.put("url", _url);
     } catch (Exception e) {
