@@ -10,6 +10,8 @@ import SystemConfiguration.CaptiveNetwork
     var mTimer: Timer?
     var timeCount: Int!
     var isCompleted = false
+    var randomNo = ""
+    var serialNo = ""
     
     var currentNetworkInfos: Array<NetworkInfo>? {
         get {
@@ -191,27 +193,53 @@ import SystemConfiguration.CaptiveNetwork
                    }
             }
 
-            
             if json["thingName"].exists() {
                 let thingName = json["thingName"].stringValue
                 print("thingname : \(thingName)")
-                UserDefaults.standard.set(thingName, forKey: "thingNameKey")
+                // UserDefaults.standard.set(thingName, forKey: "thingNameKey")
             }
 
             if json["APList"].exists() {
                 if self.scanCommand != nil {
-                    let message: NSDictionary = NSDictionary()
-                    message.setValue(Any?(json["APList"]), forKey: "APList")
-                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: (message as! [AnyHashable: Any]))
+                    print("APList : \(json["APList"].arrayValue)")
+                    var apList = [NSDictionary]();
+                    for item in json["APList"].arrayValue {
+                        let index = item["index"].intValue
+                        let SSID = item["SSID"].stringValue
+                        let securityType = item["securityType"].intValue
+                        let signal = item["signal"].intValue
+                        let ap: NSDictionary = NSDictionary(
+                           objects: [index, SSID, securityType, signal],
+                           forKeys: ["index" as NSCopying, "SSID" as NSCopying, "securityType" as NSCopying, "signal" as NSCopying])
+                        apList.append(ap);
+                    }
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: apList)
                     self.commandDelegate?.send(pluginResult, callbackId: self.scanCommand.callbackId)
+                    self.scanCommand = nil
                 }
+            }
+            
+            if json["randomNo"].exists() {
+                randomNo = json["randomNo"].stringValue
+                serialNo = json["SN"].stringValue
+                print("randomNo : \(randomNo)")
+                print("serialNo : \(serialNo)")
             }
             
             if json["RESULT_REBOOT"].exists() {
                 let resultReboot:String? = json["RESULT_REBOOT"].stringValue
                 print("resultReboot = \(String(describing: resultReboot!))")
-                if resultReboot == "0" && self.configCommand != nil {
-                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: "OK")
+                if (self.configCommand == nil) {
+                    return
+                }
+                if resultReboot == "0"{
+                    var array = [String]();
+                    array.append(randomNo)
+                    array.append(serialNo)
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAsMultipart: array)
+                    self.commandDelegate?.send(pluginResult, callbackId: self.configCommand.callbackId)
+                } else {
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "error")
                     self.commandDelegate?.send(pluginResult, callbackId: self.configCommand.callbackId)
                 }
             }
