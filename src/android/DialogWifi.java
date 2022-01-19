@@ -2,12 +2,16 @@ package com.siemens.plugins.DialogWifi;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
-
+import org.apache.cordova.PluginResult;
+import org.apache.cordova.PluginResult.Status;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -120,7 +124,7 @@ public class DialogWifi extends CordovaPlugin {
   public void onClose(CallbackContext callbackContext) {
     Log.i(TAG, "onClose()");
     mCloseCallback = callbackContext;
-    mDialogWifiImpl.onClose(mCallback);
+    mDialogWifiImpl.onClose();
   }
 
   public void scan(CallbackContext callbackContext) {
@@ -275,11 +279,14 @@ public class DialogWifi extends CordovaPlugin {
       try {
         if (obj.getInt("RESULT_REBOOT") != -1) {
           Log.i(TAG, "RESULT_REBOOT = " + obj.getInt("RESULT_REBOOT"));
+          mDialogWifiImpl.onClose();
           if (mWifiConfigCallback != null) {
-            JSONArray message = new JSONArray();
-            message.put(randomNo);
-            message.put(serialNo);
-            mWifiConfigCallback.success(message);
+            List<PluginResult> resultList = new ArrayList<PluginResult>();
+            PluginResult randomNoResult = new PluginResult(PluginResult.Status.OK, randomNo);
+            PluginResult serialNoResult = new PluginResult(PluginResult.Status.OK, serialNo);
+            resultList.add(randomNoResult);
+            resultList.add(serialNoResult);
+            mWifiConfigCallback.sendPluginResult(new PluginResult(PluginResult.Status.OK, resultList));
             return;
           }
         }

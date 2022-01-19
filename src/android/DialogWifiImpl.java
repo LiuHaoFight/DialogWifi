@@ -31,7 +31,7 @@ public class DialogWifiImpl {
   private static final String TAG = DialogWifi.class.getSimpleName();
   private boolean mIsSocketConnected = false;
 
-  //socket
+  // socket
   private AsyncSSLSocket mSSLSocket = null;
   private SSLParameters sslParameters;
   public String mHost;
@@ -50,7 +50,6 @@ public class DialogWifiImpl {
   public interface IWriteCallback {
     void onWriteResult(boolean result);
   }
-
 
   public void setHost(String host, int port) {
     this.mHost = host;
@@ -78,43 +77,47 @@ public class DialogWifiImpl {
   public void onInitSocket(ISocketStatusCallback callback) {
     Log.i(TAG, "onInitSocket()");
     this.mSocketStatusCallback = callback;
-    if (mIsSocketConnected || mSSLSocket != null) {
-      Log.e(TAG, "Socket already connected.");
-      if (this.mSocketStatusCallback != null) {
-        this.mSocketStatusCallback.onConnectResult(true);
-      }
-      return;
-    }
+    onClose();
+    // if (mIsSocketConnected || mSSLSocket != null) {
+    // Log.e(TAG, "Socket already connected.");
+    // if (this.mSocketStatusCallback != null) {
+    // this.mSocketStatusCallback.onConnectResult(true);
+    // }
+    // return;
+    // }
 
-    mIsSocketConnected = true;
-    if (mSSLSocket == null || !mSSLSocket.isOpen()) {
+    // mIsSocketConnected = true;
+    // if (mSSLSocket == null || !mSSLSocket.isOpen()) {
 
-      new Runnable() {
-        @Override
-        public void run() {
-          AsyncServer.getDefault().connectSocket(new InetSocketAddress(mHost, mPort),
-            (Exception ex, final AsyncSocket socket) -> {
-              Log.i(TAG, "AP Server Connection Completed");
-              if (socket != null && ex == null) {
-                handleConnectCompletedWithTLS(socket);
-              } else {
-                Log.e(TAG, "Socket is not connected.");
-                mIsSocketConnected = false;
-                if (mSocketStatusCallback != null) {
-                  mSocketStatusCallback.onConnectResult(false);
-                }
+    new Runnable() {
+      @Override
+      public void run() {
+        AsyncServer.getDefault().connectSocket(new InetSocketAddress(mHost, mPort),
+          (Exception ex, final AsyncSocket socket) -> {
+            Log.i(TAG, "AP Server Connection Completed");
+            if (socket != null && ex == null) {
+              handleConnectCompletedWithTLS(socket);
+            } else {
+              Log.e(TAG, "Socket is not connected.");
+              mIsSocketConnected = false;
+              if (mSocketStatusCallback != null) {
+                mSocketStatusCallback.onConnectResult(false);
               }
-            });
-        }
-      }.run();
-    } else {
-      Log.i(TAG, "Socket is already Opened.");
-    }
+            }
+          });
+      }
+    }.run();
+    // } else {
+    // Log.i(TAG, "Socket is already Opened.");
+    // }
   }
 
-  public void onClose(ISocketStatusCallback callback) {
+  public void onClose() {
+    Log.i(TAG, "onClose.");
     if (mSSLSocket != null) {
       mSSLSocket.close();
+      mSSLSocket = null;
+      mIsSocketConnected = false;
     }
   }
 
@@ -128,7 +131,7 @@ public class DialogWifiImpl {
     TrustManager[] tm = null;
 
     try {
-      tm = new TrustManager[]{createTrustMangerForAll()};
+      tm = new TrustManager[] { createTrustMangerForAll() };
       try {
         sslParameters = SSLContext.getDefault().getDefaultSSLParameters();
       } catch (NoSuchAlgorithmException e) {
@@ -159,11 +162,10 @@ public class DialogWifiImpl {
           return;
         }
 
-
         mSSLSocket = sslSocket;
         sslSocket.setWriteableCallback(() -> Log.i(TAG, "Writeable CallBack"));
 
-        //Data Callback from Device AP
+        // Data Callback from Device AP
         sslSocket.setDataCallback((DataEmitter emitter, ByteBufferList bb) -> {
           Log.i(TAG, "DataCallback");
           if (bb != null) {
@@ -181,7 +183,7 @@ public class DialogWifiImpl {
           }
         });
 
-        //Socket close Callback
+        // Socket close Callback
         sslSocket.setClosedCallback(ex1 -> {
           Log.i(TAG, "Socket Closed");
           if (ex1 != null) {
