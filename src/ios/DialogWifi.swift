@@ -268,6 +268,11 @@ import SystemConfiguration.CaptiveNetwork
             self.commandDelegate?.send(pluginResult, callbackId: self.disconnectCommand.callbackId)
             self.disconnectCommand = nil;
         }
+        if self.connectCommand != nil {
+            let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "didDisconnect")
+            self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
+            self.connectCommand = nil;
+        }
         if let error = err {
             print("Will disconnect with error: \(error)")
         } else{
@@ -295,6 +300,7 @@ import SystemConfiguration.CaptiveNetwork
         mSocket.readData(withTimeout: -1, tag: 0)
         if (self.connectCommand != nil) {
             let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: "OK")
+            pluginResult?.setKeepCallbackAs(true)
             self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
         }
     }

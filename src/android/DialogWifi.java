@@ -35,7 +35,9 @@ public class DialogWifi extends CordovaPlugin {
       if (mConnectCallback != null) {
         if (connected) {
           sendConnected();
-          mConnectCallback.success();
+          PluginResult result = new PluginResult(Status.OK, "");
+          result.setKeepCallback(true);
+          mConnectCallback.sendPluginResult(result);
         } else {
           mConnectCallback.error("");
         }
@@ -46,6 +48,9 @@ public class DialogWifi extends CordovaPlugin {
     public void onClosed() {
       if (mCloseCallback != null) {
         mCloseCallback.success();
+      }
+      if (mConnectCallback != null) {
+        mConnectCallback.error("");
       }
     }
 
