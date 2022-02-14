@@ -66,7 +66,8 @@ import SystemConfiguration.CaptiveNetwork
         let security = command.argument(at: 2) as! Int
         let hidden = command.argument(at: 3) as! Int
         let url = command.argument(at: 4) as! String
-        self.tcpSendSSIDPW(ssid: ssid, pw: pwd, security: security, isHidden: hidden, serverURL: url)
+        let bind = command.argument(at: 5) as! Int
+        self.tcpSendSSIDPW(ssid: ssid, pw: pwd, security: security, isHidden: hidden, serverURL: url, bind: bind)
     }
     
     // MARK: - WIFI Connection
@@ -315,18 +316,17 @@ import SystemConfiguration.CaptiveNetwork
     }
     
     func tcpSendDPMSet() {
-        print("==> tcpSendDPMSet()\n")
         let cmdSetDpm: String = "{\"msgType\":5, \"REQ_SET_DPM\":0, \"sleepMode\":0, \"rtcTimer\":1740, \"useDPM\":0, \"dpmKeepAlive\":30000, \"userWakeUp\":0, \"timWakeup\":10}"
+        print("tcpSendDPMSet : \(cmdSetDpm)")
         let data = cmdSetDpm.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)
         
     }
     
-    func tcpSendSSIDPW(ssid: String, pw: String, security: Int, isHidden: Int, serverURL: String) {
-        print("==> tcpSendSSIDPW()\n")
-            //add "isHidden" in v2.3.1
-        let cmdSendSSIDPW: String = "{\"msgType\":1, \"SET_AP_SSID_PW\":0, \"ssid\":\"\(ssid)\", \"pw\":\"\(pw)\", \"securityType\":\(security),  \"isHidden\":\(isHidden), \"url\":\"\(serverURL)\"}"
+    func tcpSendSSIDPW(ssid: String, pw: String, security: Int, isHidden: Int, serverURL: String, bind: Int) {
+        let cmdSendSSIDPW: String = "{\"msgType\":1, \"SET_AP_SSID_PW\":0, \"ssid\":\"\(ssid)\", \"pw\":\"\(pw)\", \"securityType\":\(security),  \"isHidden\":\(isHidden),  \"bind\":\(bind), \"url\":\"\(serverURL)\"}"
+        print("tcpSendSSIDPW : \(cmdSendSSIDPW)")
         let data = cmdSendSSIDPW.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)

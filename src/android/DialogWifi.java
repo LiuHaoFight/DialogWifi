@@ -110,7 +110,8 @@ public class DialogWifi extends CordovaPlugin {
         int _security = args.getInt(2);
         int _isHidden = args.getInt(3);
         String _url = args.getString(4);
-        this.sendSSIDPW(_ssid, _pwd, _security, _isHidden, _url, callbackContext);
+        String _bind = args.getInt(5);
+        this.sendSSIDPW(_ssid, _pwd, _security, _isHidden, _url, _bind, callbackContext);
         return true;
     }
     return false;
@@ -197,9 +198,8 @@ public class DialogWifi extends CordovaPlugin {
     });
   }
 
-  public void sendSSIDPW(String _ssid, String _pwd, int _security, int _isHidden, String _url,
+  public void sendSSIDPW(String _ssid, String _pwd, int _security, int _isHidden, String _url, int _bind,
       CallbackContext callbackContext) {
-    Log.i(TAG, "sendSSIDPW");
     this.mWifiConfigCallback = callbackContext;
     final JSONObject obj = new JSONObject();
     try {
@@ -210,9 +210,11 @@ public class DialogWifi extends CordovaPlugin {
       obj.put("securityType", _security);
       obj.put("isHidden", _isHidden);
       obj.put("url", _url);
+      obj.put("bind", _bind);
     } catch (Exception e) {
       e.printStackTrace();
     }
+    Log.i(TAG, "sendSSIDPW " + obj.toString());
     mDialogWifiImpl.write(obj, ex -> {
       if (ex != null) {
         Log.e(TAG, "Sending message error");
