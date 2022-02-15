@@ -110,7 +110,7 @@ public class DialogWifi extends CordovaPlugin {
         int _security = args.getInt(2);
         int _isHidden = args.getInt(3);
         String _url = args.getString(4);
-        String _bind = args.getInt(5);
+        int _bind = args.getInt(5);
         this.sendSSIDPW(_ssid, _pwd, _security, _isHidden, _url, _bind, callbackContext);
         return true;
     }

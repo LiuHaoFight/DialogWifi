@@ -16,6 +16,6 @@ exports.close = function (success, error) {
     exec(success, error, 'DialogWifi', 'close', []);
 };
 
-exports.sendSSIDPW = function (ssid, pwd, hidden, security_type, url, bind, success, error) {
+exports.sendSSIDPW = function (ssid, pwd, security_type, hidden, url, bind, success, error) {
     exec(success, error, 'DialogWifi', 'sendSSIDPW', [ssid, pwd, security_type, hidden, url, bind]);
 };
