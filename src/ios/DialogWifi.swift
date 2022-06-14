@@ -73,7 +73,14 @@ import SystemConfiguration.CaptiveNetwork
     // MARK: - WIFI Connection
     
     public func connectWifi(ssidS: String, pw: String, host: String, port: UInt16) {
-        wifiConfiguration = NEHotspotConfiguration(ssid: ssidS)
+        if (pw.isEmpty) {
+            wifiConfiguration = NEHotspotConfiguration(ssid: ssidS)
+        } else {
+            wifiConfiguration = NEHotspotConfiguration(
+                ssid: ssidS,
+                passphrase: pw,
+                isWEP: false)
+        }
         wifiConfiguration?.joinOnce = false
         NEHotspotConfigurationManager.shared.apply(wifiConfiguration!) { error in
             if let ssid = self.currentNetworkInfos?.first?.ssid {
