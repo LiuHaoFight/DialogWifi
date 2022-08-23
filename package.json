@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-dialog-wifi",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "com.siemens.plugs.dialogwifi",
   "main": "index.js",
   "scripts": {

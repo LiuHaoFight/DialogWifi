@@ -154,9 +154,10 @@ import SystemConfiguration.CaptiveNetwork
     
     public func disconnectSocket() {
         print("==> disconnectSocket()\n")
-        if self.mSocket != nil {
-            self.mSocket.disconnect()
-            self.mSocket = nil
+        if mSocket != nil {
+            print("==>self.mSocket != nil\n")
+            mSocket.disconnect()
+            mSocket = nil
         }
     }
     
