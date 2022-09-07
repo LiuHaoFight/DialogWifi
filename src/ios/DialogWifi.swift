@@ -81,7 +81,7 @@ import SystemConfiguration.CaptiveNetwork
                 passphrase: pw,
                 isWEP: false)
         }
-        wifiConfiguration?.joinOnce = false
+        wifiConfiguration?.joinOnce = true;
         NEHotspotConfigurationManager.shared.apply(wifiConfiguration!) { error in
             if let ssid = self.currentNetworkInfos?.first?.ssid {
                 print("connected SSID: \(ssid)")
@@ -267,6 +267,11 @@ import SystemConfiguration.CaptiveNetwork
         print(">> didDisconnect!")
         if (!isCompleted) {
 //                showToast(message: "Socket is not connected. Please retry.", seconds: 2.0)
+        }
+        if mSocket != nil {
+            print("==>mSocket != nil\n")
+            mSocket.disconnect()
+            mSocket = nil
         }
         if self.disconnectCommand != nil {
             let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: "didDisconnect")
