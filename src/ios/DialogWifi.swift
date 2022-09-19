@@ -86,8 +86,9 @@ import SystemConfiguration.CaptiveNetwork
             if let ssid = self.currentNetworkInfos?.first?.ssid {
                 print("connected SSID: \(ssid)")
                 if ssid == ssidS {
-                    usleep(500000)
-                    self.connectSocket(host:host, port:port)
+                    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5, execute: {
+                        self.connectSocket(host:host, port:port)
+                    })
                 } else {
                     if (self.connectCommand != nil) {
                         let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "error")
@@ -142,7 +143,7 @@ import SystemConfiguration.CaptiveNetwork
     public func connectSocket(host: String, port: UInt16) {
         do {
             mSocket = GCDAsyncSocket(delegate: self, delegateQueue: DispatchQueue.main)
-            try mSocket.connect(toHost: host, onPort: port, withTimeout: 5)
+            try mSocket.connect(toHost: host, onPort: port, withTimeout: 20)
         } catch let error {
             print(error)
             if self.connectCommand != nil {
@@ -156,7 +157,10 @@ import SystemConfiguration.CaptiveNetwork
         print("==> disconnectSocket()\n")
         if mSocket != nil {
             print("==>self.mSocket != nil\n")
-            mSocket.disconnect()
+            if mSocket.isConnected {
+                print("==>self.mSocket.isConnected \n")
+                mSocket.disconnect()
+            }
             mSocket = nil
         }
     }
@@ -268,9 +272,17 @@ import SystemConfiguration.CaptiveNetwork
         if (!isCompleted) {
 //                showToast(message: "Socket is not connected. Please retry.", seconds: 2.0)
         }
+        if let error = err {
+            print("Will disconnect with error: \(error)")
+        } else{
+            print("Success disconnect")
+        }
         if mSocket != nil {
             print("==>mSocket != nil\n")
-            mSocket.disconnect()
+            if mSocket.isConnected {
+                print("==>mSocket.isConnected \n")
+                mSocket.disconnect()
+            }
             mSocket = nil
         }
         if self.disconnectCommand != nil {
@@ -282,11 +294,6 @@ import SystemConfiguration.CaptiveNetwork
             let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "didDisconnect")
             self.commandDelegate?.send(pluginResult, callbackId: self.connectCommand.callbackId)
             self.connectCommand = nil;
-        }
-        if let error = err {
-            print("Will disconnect with error: \(error)")
-        } else{
-            print("Success disconnect")
         }
     }
     
@@ -304,6 +311,9 @@ import SystemConfiguration.CaptiveNetwork
     
     func tcpSendConnected() {
         print("==> tcpSendConnected()\n")
+        if (mSocket == nil) {
+            return
+        }
         let cmdConnected: String = "{\"msgType\":0,\"CONNECTED\":0}"
         let data = cmdConnected.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
@@ -317,6 +327,9 @@ import SystemConfiguration.CaptiveNetwork
     
     func tcpSendReqRescan() {
         print("==> tcpSendReqRescan()\n")
+        if (mSocket == nil) {
+            return
+        }
         let cmdReqRescan: String = "{\"msgType\":3,\"REQ_RESCAN\":0}"
         let data = cmdReqRescan.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
@@ -327,6 +340,9 @@ import SystemConfiguration.CaptiveNetwork
     func tcpSendDPMSet() {
         let cmdSetDpm: String = "{\"msgType\":5, \"REQ_SET_DPM\":0, \"sleepMode\":0, \"rtcTimer\":1740, \"useDPM\":0, \"dpmKeepAlive\":30000, \"userWakeUp\":0, \"timWakeup\":10}"
         print("tcpSendDPMSet : \(cmdSetDpm)")
+        if (mSocket == nil) {
+            return
+        }
         let data = cmdSetDpm.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)
@@ -336,6 +352,9 @@ import SystemConfiguration.CaptiveNetwork
     func tcpSendSSIDPW(ssid: String, pw: String, security: Int, isHidden: Int, serverURL: String, bind: Int) {
         let cmdSendSSIDPW: String = "{\"msgType\":1, \"SET_AP_SSID_PW\":0, \"ssid\":\"\(ssid)\", \"pw\":\"\(pw)\", \"securityType\":\(security),  \"isHidden\":\(isHidden),  \"bind\":\(bind), \"url\":\"\(serverURL)\"}"
         print("tcpSendSSIDPW : \(cmdSendSSIDPW)")
+        if (mSocket == nil) {
+            return
+        }
         let data = cmdSendSSIDPW.data(using: String.Encoding.utf8)!
         mSocket.write(data, withTimeout:10, tag: 0)
         mSocket.readData(withTimeout: -1, tag: 0)
